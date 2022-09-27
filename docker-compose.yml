@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+
+  geth-boot-node:
+    image: ethereum/client-go:alltools-v1.10.25
+    entrypoint: bootnode
+    command:
+      --nodekeyhex="936ef4cd5cc3dbf8e90deb5895defea76ed052f992fbe279e15c26d34efc3ffa"    
+  
+  geth-sealer-node:    
+    image: geth-sealer-node
+    build:
+      context: ./
+      dockerfile: ./sealer-node/Dockerfile  
+    depends_on:
+      - geth-boot-node
+    command:
+      --bootnodes="enode://c4764f6bd97e7a5762a563f4c1db3a9256eeb58d55af53405ecf625a3199c06c21a42e9eac019746df0843a05d59f7fd96f08df087e27ce71c6a22feb9008ba6@geth-boot-node:30301"
+      --datadir=/root/data
+      --networkid=1492
+      --password=/root/data/password.txt
+      --unlock=0x0170ec911A3FFa5cfCc419F4eae1Eff5B5c55aA2
+      --mine
+      --miner.threads=1
+
+  geth-rpc-node:    
+    image: geth-rpc-node
+    build:
+      context: ./
+      dockerfile: ./rpc-node/Dockerfile  
+    depends_on:
+      - geth-boot-node
+    command:
+      --bootnodes="enode://c4764f6bd97e7a5762a563f4c1db3a9256eeb58d55af53405ecf625a3199c06c21a42e9eac019746df0843a05d59f7fd96f08df087e27ce71c6a22feb9008ba6@geth-boot-node:30301"
+      --datadir=/root/data
+      --networkid=1492
+      --allow-insecure-unlock
+      --http
+      --http.vhosts="*"
+      --http.port="8545"
+      --http.addr="0.0.0.0"
+      --http.api="eth,web3,net,admin,personal"
+      --http.corsdomain="*"
+    ports:
+      - 8545:8545
+
